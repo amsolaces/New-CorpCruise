@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { heroData } from '../data/mock';
+import BookingModal from './BookingModal';
 
 const HeroSection = () => {
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
   return (
     <section className="relative min-h-screen flex items-center bg-[#1a1c1b] overflow-hidden">
       {/* Background Image */}
