@@ -45,6 +45,7 @@ const HeroSection = () => {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
+              onClick={() => setIsBookingModalOpen(true)}
               className="bg-[#d9fb06] text-[#1a1c1b] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] rounded-full px-8 py-6 font-semibold text-base uppercase tracking-tight transition-all duration-300 inline-flex items-center gap-2"
             >
               {heroData.ctaPrimary}
@@ -57,6 +58,12 @@ const HeroSection = () => {
               {heroData.ctaSecondary}
             </Button>
           </div>
+
+          {/* Booking Modal */}
+          <BookingModal 
+            isOpen={isBookingModalOpen} 
+            onClose={() => setIsBookingModalOpen(false)} 
+          />
 
           {/* Stats */}
           <div className="mt-16 flex flex-wrap gap-12">
