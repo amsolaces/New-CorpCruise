@@ -33,6 +33,10 @@ const CTASection = () => {
     }));
   };
 
+  const handleRequestAccount = () => {
+    window.location.href = 'mailto:booking@thecorpcruise.com?subject=Corporate%20Account%20Request';
+  };
+
   return (
     <section className="bg-[#3f4816] py-24 md:py-32 relative overflow-hidden">
       {/* Background Pattern */}
@@ -41,7 +45,7 @@ const CTASection = () => {
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#d9fb06] rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
       </div>
 
-      <div className="relative max-w-[87.5rem] mx-auto px-10">
+      <div className="relative max-w-[87.5rem] mx-auto px-6 md:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left Content */}
           <div>
@@ -53,7 +57,7 @@ const CTASection = () => {
               Upgrade Your<br />Corporate Travel
             </h2>
             <p className="text-[#d9fb06]/80 font-medium text-lg mb-8 leading-relaxed">
-              Join hundreds of businesses that trust The Corp Cruise for their executive transportation needs.
+              Join hundreds of businesses that trust CorpCruise for their executive transportation needs.
             </p>
 
             {/* Benefits */}
@@ -62,13 +66,25 @@ const CTASection = () => {
                 'Dedicated corporate account manager',
                 'Customized billing and invoicing',
                 'Priority booking and 24/7 support',
-                'Volume discounts for enterprise clients'
+                '100% Satisfaction Guaranteed'
               ].map((benefit, index) => (
                 <div key={index} className="flex items-center gap-3">
                   <CheckCircle className="text-[#d9fb06]" size={20} />
                   <span className="text-[#d9fb06] font-medium">{benefit}</span>
                 </div>
               ))}
+            </div>
+
+            {/* Email CTA */}
+            <div className="mt-8">
+              <Button
+                onClick={handleRequestAccount}
+                variant="outline"
+                className="bg-transparent text-[#d9fb06] border-[#d9fb06] hover:bg-[#d9fb06] hover:text-[#1a1c1b] rounded-full px-8 py-6 font-semibold text-base uppercase tracking-tight transition-all duration-300"
+              >
+                Email Us Directly
+                <ArrowRight size={20} className="ml-2" />
+              </Button>
             </div>
           </div>
 
