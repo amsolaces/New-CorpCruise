@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { 
@@ -14,11 +15,16 @@ import {
   FileText, 
   Users,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 // Admin credentials
 const ADMIN_EMAIL = 'mak@thecorpcruise.com';
@@ -35,7 +41,7 @@ const AdminPage = () => {
   // Data states
   const [generatedCodes, setGeneratedCodes] = useState([]);
   const [bookings, setBookings] = useState([]);
-  const [requests, setRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [copiedCode, setCopiedCode] = useState(null);
 
   // Check for saved login on mount
@@ -44,27 +50,46 @@ const AdminPage = () => {
     if (savedLogin === 'true') {
       setIsLoggedIn(true);
     }
-    
-    // Load saved data
-    const savedCodes = localStorage.getItem('corpcruise_codes');
-    const savedBookings = localStorage.getItem('corpcruise_bookings');
-    const savedRequests = localStorage.getItem('corpcruise_requests');
-    
-    if (savedCodes) setGeneratedCodes(JSON.parse(savedCodes));
-    if (savedBookings) setBookings(JSON.parse(savedBookings));
-    if (savedRequests) setRequests(JSON.parse(savedRequests));
   }, []);
 
-  // Save data when it changes
+  // Fetch codes and bookings when logged in
   useEffect(() => {
-    localStorage.setItem('corpcruise_codes', JSON.stringify(generatedCodes));
-  }, [generatedCodes]);
+    if (isLoggedIn) {
+      fetchCodes();
+      fetchBookings();
+    }
+  }, [isLoggedIn]);
+
+  // Auto-refresh codes every 30 seconds to update expiry status
+  useEffect(() => {
+    if (isLoggedIn && activeTab === 'codes') {
+      const interval = setInterval(fetchCodes, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn, activeTab]);
+
+  const fetchCodes = async () => {
+    try {
+      const response = await axios.get(`${API}/codes`);
+      setGeneratedCodes(response.data);
+    } catch (error) {
+      console.error('Error fetching codes:', error);
+    }
+  };
+
+  const fetchBookings = async () => {
+    try {
+      const response = await axios.get(`${API}/bookings`);
+      setBookings(response.data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoggingIn(true);
     
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
@@ -86,27 +111,17 @@ const AdminPage = () => {
     toast.success('Logged out successfully');
   };
 
-  // Generate unique code
-  const generateUniqueCode = () => {
-    const prefix = 'CORP';
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const year = new Date().getFullYear();
-    return `${prefix}-${random}-${year}-${timestamp}`;
-  };
-
-  const handleGenerateCode = () => {
-    const newCode = {
-      id: Date.now(),
-      code: generateUniqueCode(),
-      createdAt: new Date().toISOString(),
-      used: false,
-      usedBy: null,
-      usedAt: null
-    };
-    
-    setGeneratedCodes(prev => [newCode, ...prev]);
-    toast.success('New booking code generated!');
+  const handleGenerateCode = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post(`${API}/codes`);
+      setGeneratedCodes(prev => [response.data, ...prev]);
+      toast.success('New booking code generated! Valid for 15 minutes.');
+    } catch (error) {
+      console.error('Error generating code:', error);
+      toast.error('Failed to generate code. Please try again.');
+    }
+    setIsLoading(false);
   };
 
   const handleCopyCode = (code) => {
@@ -116,9 +131,20 @@ const AdminPage = () => {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const handleDeleteCode = (id) => {
-    setGeneratedCodes(prev => prev.filter(c => c.id !== id));
-    toast.success('Code deleted');
+  const handleDeleteCode = async (id) => {
+    try {
+      await axios.delete(`${API}/codes/${id}`);
+      setGeneratedCodes(prev => prev.filter(c => c.id !== id));
+      toast.success('Code deleted');
+    } catch (error) {
+      console.error('Error deleting code:', error);
+      toast.error('Failed to delete code');
+    }
+  };
+
+  const formatDateTime = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleString();
   };
 
   // Login Form
@@ -235,7 +261,6 @@ const AdminPage = () => {
             {[
               { id: 'codes', label: 'Booking Codes', icon: Ticket },
               { id: 'bookings', label: 'New Bookings', icon: FileText },
-              { id: 'requests', label: 'New Requests', icon: Users },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -256,17 +281,32 @@ const AdminPage = () => {
           {activeTab === 'codes' && (
             <div>
               {/* Generate Code Button */}
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-[#d9fb06] font-semibold text-xl">
-                  Generated Codes ({generatedCodes.length})
-                </h2>
-                <Button
-                  onClick={handleGenerateCode}
-                  className="bg-[#d9fb06] text-[#1a1c1b] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] rounded-full px-6 py-2 font-semibold text-sm uppercase transition-all duration-300 inline-flex items-center gap-2"
-                >
-                  <Plus size={18} />
-                  Generate New Code
-                </Button>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-[#d9fb06] font-semibold text-xl">
+                    Generated Codes ({generatedCodes.length})
+                  </h2>
+                  <p className="text-[#888680] text-sm mt-1">
+                    Each code is valid for 15 minutes and can be used once
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={fetchCodes}
+                    variant="outline"
+                    className="bg-transparent text-[#d9fb06] border-[#d9fb06] hover:bg-[#d9fb06] hover:text-[#1a1c1b] rounded-full px-4 py-2 transition-all duration-300"
+                  >
+                    <RefreshCw size={18} />
+                  </Button>
+                  <Button
+                    onClick={handleGenerateCode}
+                    disabled={isLoading}
+                    className="bg-[#d9fb06] text-[#1a1c1b] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] rounded-full px-6 py-2 font-semibold text-sm uppercase transition-all duration-300 inline-flex items-center gap-2"
+                  >
+                    <Plus size={18} />
+                    Generate New Code
+                  </Button>
+                </div>
               </div>
 
               {/* Codes List */}
@@ -279,53 +319,80 @@ const AdminPage = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {generatedCodes.map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-[#302f2c] border border-[rgba(63,72,22,0.5)] p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                    >
-                      <div className="flex-grow">
-                        <div className="flex items-center gap-3 mb-2">
-                          <code className="text-[#d9fb06] font-mono text-lg font-bold">
-                            {item.code}
-                          </code>
-                          {item.used && (
-                            <span className="bg-[#3f4816] text-[#d9fb06] text-xs font-semibold px-2 py-1 rounded-full">
-                              USED
-                            </span>
+                  {generatedCodes.map((item) => {
+                    const isExpired = item.is_expired;
+                    const isUsed = item.used;
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className={`bg-[#302f2c] border p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                          isExpired || isUsed 
+                            ? 'border-[#888680]/30 opacity-60' 
+                            : 'border-[rgba(63,72,22,0.5)]'
+                        }`}
+                      >
+                        <div className="flex-grow">
+                          <div className="flex flex-wrap items-center gap-3 mb-2">
+                            <code className="text-[#d9fb06] font-mono text-lg font-bold">
+                              {item.code}
+                            </code>
+                            {isUsed && (
+                              <span className="bg-[#3f4816] text-[#d9fb06] text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                                <Check size={12} />
+                                USED
+                              </span>
+                            )}
+                            {isExpired && !isUsed && (
+                              <span className="bg-red-900/50 text-red-400 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                                <AlertCircle size={12} />
+                                EXPIRED
+                              </span>
+                            )}
+                            {!isExpired && !isUsed && (
+                              <span className="bg-green-900/50 text-green-400 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+                                <Clock size={12} />
+                                {item.minutes_remaining} min left
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[#888680] text-sm">
+                            Created: {formatDateTime(item.created_at)}
+                          </p>
+                          <p className="text-[#888680] text-sm">
+                            Expires: {formatDateTime(item.expires_at)}
+                          </p>
+                          {item.used_by && item.used_at && (
+                            <p className="text-[#888680] text-sm">
+                              Used by: {item.used_by} on {formatDateTime(item.used_at)}
+                            </p>
                           )}
                         </div>
-                        <p className="text-[#888680] text-sm">
-                          Created: {new Date(item.createdAt).toLocaleString()}
-                        </p>
-                        {item.usedBy && (
-                          <p className="text-[#888680] text-sm">
-                            Used by: {item.usedBy} on {new Date(item.usedAt).toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={() => handleCopyCode(item.code)}
-                          variant="outline"
-                          className="bg-transparent text-[#d9fb06] border-[#d9fb06] hover:bg-[#d9fb06] hover:text-[#1a1c1b] rounded-full px-4 py-2 transition-all duration-300"
-                        >
-                          {copiedCode === item.code ? (
-                            <Check size={18} />
-                          ) : (
-                            <Copy size={18} />
+                        <div className="flex gap-2">
+                          {!isExpired && !isUsed && (
+                            <Button
+                              onClick={() => handleCopyCode(item.code)}
+                              variant="outline"
+                              className="bg-transparent text-[#d9fb06] border-[#d9fb06] hover:bg-[#d9fb06] hover:text-[#1a1c1b] rounded-full px-4 py-2 transition-all duration-300"
+                            >
+                              {copiedCode === item.code ? (
+                                <Check size={18} />
+                              ) : (
+                                <Copy size={18} />
+                              )}
+                            </Button>
                           )}
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteCode(item.id)}
-                          variant="outline"
-                          className="bg-transparent text-red-500 border-red-500 hover:bg-red-500 hover:text-white rounded-full px-4 py-2 transition-all duration-300"
-                        >
-                          <Trash2 size={18} />
-                        </Button>
+                          <Button
+                            onClick={() => handleDeleteCode(item.id)}
+                            variant="outline"
+                            className="bg-transparent text-red-500 border-red-500 hover:bg-red-500 hover:text-white rounded-full px-4 py-2 transition-all duration-300"
+                          >
+                            <Trash2 size={18} />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -338,11 +405,7 @@ const AdminPage = () => {
                   New Bookings ({bookings.length})
                 </h2>
                 <Button
-                  onClick={() => {
-                    const savedBookings = localStorage.getItem('corpcruise_bookings');
-                    if (savedBookings) setBookings(JSON.parse(savedBookings));
-                    toast.success('Bookings refreshed');
-                  }}
+                  onClick={fetchBookings}
                   variant="outline"
                   className="bg-transparent text-[#d9fb06] border-[#d9fb06] hover:bg-[#d9fb06] hover:text-[#1a1c1b] rounded-full px-4 py-2 transition-all duration-300"
                 >
@@ -367,61 +430,31 @@ const AdminPage = () => {
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div className="flex-grow">
                           <div className="flex items-center gap-3 mb-2">
-                            <span className="text-[#d9fb06] font-semibold text-lg">{booking.fullName}</span>
+                            <span className="text-[#d9fb06] font-semibold text-lg">{booking.full_name}</span>
                             <span className="bg-[#3f4816] text-[#d9fb06] text-xs font-semibold px-2 py-1 rounded-full uppercase">
                               {booking.status || 'pending'}
                             </span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Company:</span> {booking.companyName}</p>
-                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Phone:</span> {booking.phoneNumber}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Company:</span> {booking.company_name}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Phone:</span> {booking.phone_number}</p>
                             <p className="text-[#888680]"><span className="text-[#d9fb06]">Email:</span> {booking.email}</p>
                             <p className="text-[#888680]"><span className="text-[#d9fb06]">City:</span> {booking.city}</p>
-                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Duty Type:</span> {booking.dutyType}</p>
-                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Vehicle:</span> {booking.vehicleCategory}</p>
-                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Pickup:</span> {booking.pickupLocation}</p>
-                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Dropoff:</span> {booking.dropoffLocation}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Duty Type:</span> {booking.duty_type}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Vehicle:</span> {booking.vehicle_category}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Pickup:</span> {booking.pickup_location}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Dropoff:</span> {booking.dropoff_location}</p>
                             <p className="text-[#888680]"><span className="text-[#d9fb06]">Date:</span> {booking.date}</p>
                             <p className="text-[#888680]"><span className="text-[#d9fb06]">Time:</span> {booking.time}</p>
                           </div>
-                          {booking.specialRequests && (
-                            <p className="text-[#888680] mt-2"><span className="text-[#d9fb06]">Special Requests:</span> {booking.specialRequests}</p>
+                          {booking.special_requests && (
+                            <p className="text-[#888680] mt-2"><span className="text-[#d9fb06]">Special Requests:</span> {booking.special_requests}</p>
                           )}
                           <p className="text-[#888680] text-xs mt-3">
-                            Code: {booking.code} | Booked: {new Date(booking.createdAt).toLocaleString()}
+                            Code: {booking.code} | Booked: {formatDateTime(booking.created_at)}
                           </p>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'requests' && (
-            <div>
-              <h2 className="text-[#d9fb06] font-semibold text-xl mb-6">
-                New Requests ({requests.length})
-              </h2>
-              
-              {requests.length === 0 ? (
-                <div className="bg-[#302f2c] border border-[rgba(63,72,22,0.5)] p-12 text-center">
-                  <Users className="text-[#888680] mx-auto mb-4" size={48} />
-                  <p className="text-[#888680] font-medium">
-                    No new requests yet. Corporate account requests will appear here.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {requests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="bg-[#302f2c] border border-[rgba(63,72,22,0.5)] p-6"
-                    >
-                      <p className="text-[#d9fb06] font-semibold">{request.name}</p>
-                      <p className="text-[#888680] text-sm">{request.company}</p>
-                      <p className="text-[#888680] text-sm">{request.email}</p>
                     </div>
                   ))}
                 </div>
