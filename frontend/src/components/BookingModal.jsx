@@ -11,7 +11,9 @@ import { Textarea } from './ui/textarea';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from './ui/select';
@@ -27,11 +29,7 @@ import {
   Bus,
   ArrowRight,
   ArrowLeft,
-  Calendar,
-  Clock,
-  MapPin,
-  User,
-  Building
+  MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { contactInfo } from '../data/mock';
@@ -62,16 +60,18 @@ const BookingModal = ({ isOpen, onClose }) => {
     specialRequests: ''
   });
 
-  const cities = [
-    'Mumbai',
-    'Delhi',
-    'Bangalore',
-    'Chennai',
-    'Hyderabad',
-    'Pune',
-    'Kolkata',
-    'Ahmedabad'
+  // Grouped cities
+  const indianCities = [
+    'Mumbai', 'Delhi', 'Bhubaneswar', 'Kolkata', 'Ranchi', 'Chennai',
+    'Lucknow', 'Bengaluru', 'Amritsar', 'Hyderabad', 'Vijayawada',
+    'Chandigarh', 'Vizag (Visakhapatnam)', 'Nainital', 'Tirupati',
+    'Rishikesh', 'Jalandhar', 'Dehradun', 'Madurai', 'Allahabad (Prayagraj)',
+    'Coimbatore', 'Varanasi', 'Indore', 'Bhopal', 'Nagpur', 'Gwalior',
+    'Pune', 'Aurangabad', 'Nashik', 'Shirdi', 'Pondicherry', 'Patna',
+    'Ludhiana', 'Mysore', 'Manipal', 'Kochi'
   ];
+
+  const internationalCities = ['Dubai', 'Nepal', 'Bangladesh'];
 
   const dutyTypes = [
     { value: 'employee-transport', label: 'Employee Transport' },
@@ -140,7 +140,6 @@ const BookingModal = ({ isOpen, onClose }) => {
   };
 
   const handleNext = () => {
-    // Validate current step
     if (currentStep === 1) {
       if (!bookingData.companyName || !bookingData.city || !bookingData.dutyType) {
         toast.error('Please fill in all required fields');
@@ -166,7 +165,6 @@ const BookingModal = ({ isOpen, onClose }) => {
       return;
     }
 
-    // Save booking to localStorage
     const savedBookings = localStorage.getItem('corpcruise_bookings');
     const bookings = savedBookings ? JSON.parse(savedBookings) : [];
     
@@ -183,7 +181,6 @@ const BookingModal = ({ isOpen, onClose }) => {
     
     toast.success('Booking confirmed! Our team will contact you shortly.');
     
-    // Reset and close
     setTimeout(() => {
       handleClose();
     }, 1500);
@@ -219,7 +216,6 @@ const BookingModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // Progress bar
   const getProgress = () => {
     if (currentStep === 0) return 0;
     return ((currentStep) / 3) * 100;
@@ -227,22 +223,28 @@ const BookingModal = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-white border-none max-w-lg p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-[#1a1c1b] border border-[rgba(63,72,22,0.5)] max-w-lg p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="relative p-6 pb-4 bg-white">
+        <div className="relative p-6 pb-4">
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-300"
+            className="absolute top-4 right-4 text-[#888680] hover:text-[#d9fb06] transition-colors duration-300"
           >
             <X size={24} />
           </button>
           
+          {currentStep === 0 && (
+            <div className="w-16 h-16 bg-[#3f4816] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Shield className="text-[#d9fb06]" size={32} />
+            </div>
+          )}
+          
           <DialogHeader>
             <DialogTitle className="text-center">
-              <span className="text-gray-900 font-bold text-2xl block" style={{ fontFamily: 'Georgia, serif' }}>
+              <span className="text-[#d9fb06] font-black text-2xl uppercase tracking-tight block">
                 {currentStep === 0 ? 'Corporate Access Required' : 'Book Your Luxury Ride'}
               </span>
-              <span className="text-gray-500 text-sm font-normal block mt-1">
+              <span className="text-[#888680] text-sm font-medium block mt-2">
                 {currentStep === 0 
                   ? 'Enter your access code to book a ride'
                   : 'Experience premium corporate transportation with CorpCruise'
@@ -253,9 +255,9 @@ const BookingModal = ({ isOpen, onClose }) => {
 
           {/* Progress Bar */}
           {currentStep > 0 && (
-            <div className="mt-4 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div className="mt-4 h-1.5 bg-[#302f2c] rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500"
+                className="h-full bg-[#d9fb06] transition-all duration-500"
                 style={{ width: `${getProgress()}%` }}
               />
             </div>
@@ -266,7 +268,7 @@ const BookingModal = ({ isOpen, onClose }) => {
         {currentStep === 0 && (
           <form onSubmit={handleVerify} className="px-6 pb-6">
             <div className="mb-6">
-              <label className="text-gray-700 text-sm font-semibold block mb-2">
+              <label className="text-[#d9fb06] text-sm font-semibold uppercase tracking-wider block mb-2">
                 Access Code
               </label>
               <Input
@@ -275,21 +277,21 @@ const BookingModal = ({ isOpen, onClose }) => {
                 onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                 placeholder="E.g., CORP-ABC-2024-001"
                 disabled={isVerifying || isVerified}
-                className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 h-12 text-base focus:border-amber-400 focus:ring-amber-400"
+                className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] placeholder:text-[#888680]/60 h-14 text-lg font-medium tracking-wide focus:border-[#d9fb06] focus:ring-[#d9fb06]"
               />
             </div>
 
             {/* Help Box */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-              <p className="text-gray-800 font-semibold mb-2 text-sm">
+            <div className="bg-[#302f2c] border border-[rgba(63,72,22,0.5)] rounded-lg p-4 mb-6">
+              <p className="text-[#d9fb06] font-semibold mb-2 text-sm">
                 Need an access code?
               </p>
               <div className="space-y-1">
-                <a href={`tel:${contactInfo.phone}`} className="flex items-center gap-2 text-gray-600 hover:text-amber-600 transition-colors text-sm">
+                <a href={`tel:${contactInfo.phone}`} className="flex items-center gap-2 text-[#888680] hover:text-[#d9fb06] transition-colors text-sm">
                   <Phone size={14} />
                   <span>Contact: {contactInfo.phone}</span>
                 </a>
-                <a href={`mailto:${contactInfo.email}`} className="flex items-center gap-2 text-gray-600 hover:text-amber-600 transition-colors text-sm">
+                <a href={`mailto:${contactInfo.email}`} className="flex items-center gap-2 text-[#888680] hover:text-[#d9fb06] transition-colors text-sm">
                   <Mail size={14} />
                   <span>Email: {contactInfo.email}</span>
                 </a>
@@ -299,10 +301,10 @@ const BookingModal = ({ isOpen, onClose }) => {
             <Button
               type="submit"
               disabled={isVerifying || isVerified}
-              className={`w-full rounded-full py-6 font-semibold text-base uppercase tracking-wide transition-all duration-300 ${
+              className={`w-full rounded-full py-6 font-semibold text-base uppercase tracking-tight transition-all duration-300 ${
                 isVerified
                   ? 'bg-green-500 text-white'
-                  : 'bg-gradient-to-r from-amber-400 to-amber-500 text-white hover:from-amber-500 hover:to-amber-600'
+                  : 'bg-[#d9fb06] text-[#1a1c1b] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]'
               }`}
             >
               {isVerifying ? (
@@ -328,52 +330,79 @@ const BookingModal = ({ isOpen, onClose }) => {
         {/* Step 1: Company Service Details */}
         {currentStep === 1 && (
           <div className="px-6 pb-6">
-            <h3 className="text-gray-900 font-semibold text-lg mb-4">Company Service Details</h3>
+            <h3 className="text-[#d9fb06] font-semibold text-lg mb-4">Company Service Details</h3>
             
             <div className="space-y-4">
               {/* Company Name */}
               <div>
-                <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                  Company Name <span className="text-red-500">*</span>
+                <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                  Company Name <span className="text-red-400">*</span>
                 </label>
                 <Input
                   type="text"
                   value={bookingData.companyName}
                   onChange={(e) => handleInputChange('companyName', e.target.value)}
                   placeholder="Enter company name"
-                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 focus:border-amber-400 focus:ring-amber-400"
+                  className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] placeholder:text-[#888680]/60 h-11 focus:border-[#d9fb06] focus:ring-[#d9fb06]"
                 />
               </div>
 
               {/* City and Duty Type */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                    Select City <span className="text-red-500">*</span>
+                  <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                    Select City <span className="text-red-400">*</span>
                   </label>
                   <Select value={bookingData.city} onValueChange={(value) => handleInputChange('city', value)}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900 h-11 focus:border-amber-400 focus:ring-amber-400">
-                      <SelectValue placeholder="Choose your city" />
+                    <SelectTrigger className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] h-11 focus:border-[#d9fb06] focus:ring-[#d9fb06] [&>span]:text-[#888680]/60 [&[data-state=open]>span]:text-[#d9fb06] data-[placeholder]:text-[#888680]/60">
+                      <SelectValue placeholder="Choose city" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {cities.map(city => (
-                        <SelectItem key={city} value={city.toLowerCase()}>{city}</SelectItem>
-                      ))}
+                    <SelectContent className="bg-[#302f2c] border-[#3f4816] max-h-[300px]">
+                      <SelectGroup>
+                        <SelectLabel className="text-[#d9fb06] font-semibold text-xs uppercase tracking-wider px-2 py-2">Indian Cities</SelectLabel>
+                        {indianCities.map(city => (
+                          <SelectItem 
+                            key={city} 
+                            value={city.toLowerCase().replace(/\s+/g, '-')}
+                            className="text-[#888680] hover:text-[#d9fb06] hover:bg-[#3f4816] focus:bg-[#3f4816] focus:text-[#d9fb06]"
+                          >
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel className="text-[#d9fb06] font-semibold text-xs uppercase tracking-wider px-2 py-2 border-t border-[#3f4816] mt-2">International</SelectLabel>
+                        {internationalCities.map(city => (
+                          <SelectItem 
+                            key={city} 
+                            value={city.toLowerCase().replace(/\s+/g, '-')}
+                            className="text-[#888680] hover:text-[#d9fb06] hover:bg-[#3f4816] focus:bg-[#3f4816] focus:text-[#d9fb06]"
+                          >
+                            {city}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
-                  <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                    Duty Type <span className="text-red-500">*</span>
+                  <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                    Duty Type <span className="text-red-400">*</span>
                   </label>
                   <Select value={bookingData.dutyType} onValueChange={(value) => handleInputChange('dutyType', value)}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-900 h-11 focus:border-amber-400 focus:ring-amber-400">
-                      <SelectValue placeholder="Select duty type" />
+                    <SelectTrigger className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] h-11 focus:border-[#d9fb06] focus:ring-[#d9fb06] [&>span]:text-[#888680]/60 [&[data-state=open]>span]:text-[#d9fb06] data-[placeholder]:text-[#888680]/60">
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-[#302f2c] border-[#3f4816]">
                       {dutyTypes.map(type => (
-                        <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                        <SelectItem 
+                          key={type.value} 
+                          value={type.value}
+                          className="text-[#888680] hover:text-[#d9fb06] hover:bg-[#3f4816] focus:bg-[#3f4816] focus:text-[#d9fb06]"
+                        >
+                          {type.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -382,8 +411,8 @@ const BookingModal = ({ isOpen, onClose }) => {
 
               {/* Vehicle Category */}
               <div>
-                <label className="text-gray-700 text-sm font-medium block mb-2">
-                  Vehicle Category <span className="text-red-500">*</span>
+                <label className="text-[#d9fb06] text-sm font-medium block mb-2">
+                  Vehicle Category <span className="text-red-400">*</span>
                 </label>
                 <div className="grid grid-cols-3 gap-3">
                   {vehicleCategories.map(vehicle => {
@@ -396,15 +425,15 @@ const BookingModal = ({ isOpen, onClose }) => {
                         onClick={() => handleInputChange('vehicleCategory', vehicle.value)}
                         className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
                           isSelected 
-                            ? 'border-amber-400 bg-amber-50' 
-                            : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                            ? 'border-[#d9fb06] bg-[#3f4816]' 
+                            : 'border-[#3f4816] bg-[#302f2c] hover:border-[#888680]'
                         }`}
                       >
                         <IconComponent 
                           size={28} 
-                          className={isSelected ? 'text-amber-500' : 'text-gray-400'} 
+                          className={isSelected ? 'text-[#d9fb06]' : 'text-[#888680]'} 
                         />
-                        <span className={`text-sm font-medium ${isSelected ? 'text-amber-600' : 'text-gray-600'}`}>
+                        <span className={`text-sm font-medium ${isSelected ? 'text-[#d9fb06]' : 'text-[#888680]'}`}>
                           {vehicle.label}
                         </span>
                       </button>
@@ -415,7 +444,7 @@ const BookingModal = ({ isOpen, onClose }) => {
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 my-6" />
+            <div className="border-t border-[#3f4816] my-6" />
 
             {/* Buttons */}
             <div className="flex gap-3">
@@ -423,7 +452,7 @@ const BookingModal = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={handleCancel}
                 variant="outline"
-                className="flex-1 rounded-full py-5 font-semibold text-amber-600 border-amber-400 hover:bg-amber-50"
+                className="flex-1 rounded-full py-5 font-semibold text-[#d9fb06] border-[#d9fb06] bg-transparent hover:bg-[#d9fb06] hover:text-[#1a1c1b]"
               >
                 <X size={18} className="mr-2" />
                 Cancel
@@ -431,7 +460,7 @@ const BookingModal = ({ isOpen, onClose }) => {
               <Button
                 type="button"
                 onClick={handleNext}
-                className="flex-1 rounded-full py-5 font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-white hover:from-amber-500 hover:to-amber-600"
+                className="flex-1 rounded-full py-5 font-semibold bg-[#d9fb06] text-[#1a1c1b] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               >
                 Next
                 <ArrowRight size={18} className="ml-2" />
@@ -443,22 +472,22 @@ const BookingModal = ({ isOpen, onClose }) => {
         {/* Step 2: Pickup Details */}
         {currentStep === 2 && (
           <div className="px-6 pb-6">
-            <h3 className="text-gray-900 font-semibold text-lg mb-4">Pickup Details</h3>
+            <h3 className="text-[#d9fb06] font-semibold text-lg mb-4">Pickup Details</h3>
             
             <div className="space-y-4">
               {/* Pickup Location */}
               <div>
-                <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                  Pickup Location <span className="text-red-500">*</span>
+                <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                  Pickup Location <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-[#888680]" size={18} />
                   <Input
                     type="text"
                     value={bookingData.pickupLocation}
                     onChange={(e) => handleInputChange('pickupLocation', e.target.value)}
                     placeholder="Enter pickup location"
-                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 pl-10 focus:border-amber-400 focus:ring-amber-400"
+                    className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] placeholder:text-[#888680]/60 h-11 pl-10 focus:border-[#d9fb06] focus:ring-[#d9fb06]"
                   />
                 </div>
               </div>
@@ -466,54 +495,50 @@ const BookingModal = ({ isOpen, onClose }) => {
               {/* Date and Time */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                    Date <span className="text-red-500">*</span>
+                  <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                    Date <span className="text-red-400">*</span>
                   </label>
-                  <div className="relative">
-                    <Input
-                      type="date"
-                      value={bookingData.date}
-                      onChange={(e) => handleInputChange('date', e.target.value)}
-                      className="bg-gray-50 border-gray-200 text-gray-900 h-11 focus:border-amber-400 focus:ring-amber-400"
-                    />
-                  </div>
+                  <Input
+                    type="date"
+                    value={bookingData.date}
+                    onChange={(e) => handleInputChange('date', e.target.value)}
+                    className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] h-11 focus:border-[#d9fb06] focus:ring-[#d9fb06] [color-scheme:dark]"
+                  />
                 </div>
                 
                 <div>
-                  <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                    Time <span className="text-red-500">*</span>
+                  <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                    Time <span className="text-red-400">*</span>
                   </label>
-                  <div className="relative">
-                    <Input
-                      type="time"
-                      value={bookingData.time}
-                      onChange={(e) => handleInputChange('time', e.target.value)}
-                      className="bg-gray-50 border-gray-200 text-gray-900 h-11 focus:border-amber-400 focus:ring-amber-400"
-                    />
-                  </div>
+                  <Input
+                    type="time"
+                    value={bookingData.time}
+                    onChange={(e) => handleInputChange('time', e.target.value)}
+                    className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] h-11 focus:border-[#d9fb06] focus:ring-[#d9fb06] [color-scheme:dark]"
+                  />
                 </div>
               </div>
 
               {/* Dropoff Location */}
               <div>
-                <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                  Dropoff Location <span className="text-red-500">*</span>
+                <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                  Dropoff Location <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-[#888680]" size={18} />
                   <Input
                     type="text"
                     value={bookingData.dropoffLocation}
                     onChange={(e) => handleInputChange('dropoffLocation', e.target.value)}
                     placeholder="Enter dropoff location"
-                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 pl-10 focus:border-amber-400 focus:ring-amber-400"
+                    className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] placeholder:text-[#888680]/60 h-11 pl-10 focus:border-[#d9fb06] focus:ring-[#d9fb06]"
                   />
                 </div>
               </div>
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 my-6" />
+            <div className="border-t border-[#3f4816] my-6" />
 
             {/* Buttons */}
             <div className="flex gap-3">
@@ -521,7 +546,7 @@ const BookingModal = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={handleBack}
                 variant="outline"
-                className="flex-1 rounded-full py-5 font-semibold text-amber-600 border-amber-400 hover:bg-amber-50"
+                className="flex-1 rounded-full py-5 font-semibold text-[#d9fb06] border-[#d9fb06] bg-transparent hover:bg-[#d9fb06] hover:text-[#1a1c1b]"
               >
                 <ArrowLeft size={18} className="mr-2" />
                 Back
@@ -529,7 +554,7 @@ const BookingModal = ({ isOpen, onClose }) => {
               <Button
                 type="button"
                 onClick={handleNext}
-                className="flex-1 rounded-full py-5 font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-white hover:from-amber-500 hover:to-amber-600"
+                className="flex-1 rounded-full py-5 font-semibold bg-[#d9fb06] text-[#1a1c1b] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               >
                 Next
                 <ArrowRight size={18} className="ml-2" />
@@ -541,55 +566,55 @@ const BookingModal = ({ isOpen, onClose }) => {
         {/* Step 3: Passenger Details */}
         {currentStep === 3 && (
           <div className="px-6 pb-6">
-            <h3 className="text-gray-900 font-semibold text-lg mb-4">Passenger Details</h3>
+            <h3 className="text-[#d9fb06] font-semibold text-lg mb-4">Passenger Details</h3>
             
             <div className="space-y-4">
               {/* Full Name and Phone */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                    Full Name <span className="text-red-500">*</span>
+                  <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                    Full Name <span className="text-red-400">*</span>
                   </label>
                   <Input
                     type="text"
                     value={bookingData.fullName}
                     onChange={(e) => handleInputChange('fullName', e.target.value)}
                     placeholder="Enter full name"
-                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 focus:border-amber-400 focus:ring-amber-400"
+                    className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] placeholder:text-[#888680]/60 h-11 focus:border-[#d9fb06] focus:ring-[#d9fb06]"
                   />
                 </div>
                 
                 <div>
-                  <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                    Phone Number <span className="text-red-500">*</span>
+                  <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                    Phone Number <span className="text-red-400">*</span>
                   </label>
                   <Input
                     type="tel"
                     value={bookingData.phoneNumber}
                     onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                     placeholder="Enter phone number"
-                    className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 focus:border-amber-400 focus:ring-amber-400"
+                    className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] placeholder:text-[#888680]/60 h-11 focus:border-[#d9fb06] focus:ring-[#d9fb06]"
                   />
                 </div>
               </div>
 
               {/* Email */}
               <div>
-                <label className="text-gray-700 text-sm font-medium block mb-1.5">
-                  Email <span className="text-red-500">*</span>
+                <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
+                  Email <span className="text-red-400">*</span>
                 </label>
                 <Input
                   type="email"
                   value={bookingData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   placeholder="Enter email address"
-                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 h-11 focus:border-amber-400 focus:ring-amber-400"
+                  className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] placeholder:text-[#888680]/60 h-11 focus:border-[#d9fb06] focus:ring-[#d9fb06]"
                 />
               </div>
 
               {/* Special Requests */}
               <div>
-                <label className="text-gray-700 text-sm font-medium block mb-1.5">
+                <label className="text-[#d9fb06] text-sm font-medium block mb-1.5">
                   Special Requests
                 </label>
                 <Textarea
@@ -597,13 +622,13 @@ const BookingModal = ({ isOpen, onClose }) => {
                   onChange={(e) => handleInputChange('specialRequests', e.target.value)}
                   placeholder="Any special requests or notes..."
                   rows={3}
-                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 resize-none focus:border-amber-400 focus:ring-amber-400"
+                  className="bg-[#302f2c] border-[#3f4816] text-[#d9fb06] placeholder:text-[#888680]/60 resize-none focus:border-[#d9fb06] focus:ring-[#d9fb06]"
                 />
               </div>
             </div>
 
             {/* Separator */}
-            <div className="border-t border-gray-200 my-6" />
+            <div className="border-t border-[#3f4816] my-6" />
 
             {/* Buttons */}
             <div className="flex gap-3">
@@ -611,7 +636,7 @@ const BookingModal = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={handleBack}
                 variant="outline"
-                className="flex-1 rounded-full py-5 font-semibold text-amber-600 border-amber-400 hover:bg-amber-50"
+                className="flex-1 rounded-full py-5 font-semibold text-[#d9fb06] border-[#d9fb06] bg-transparent hover:bg-[#d9fb06] hover:text-[#1a1c1b]"
               >
                 <ArrowLeft size={18} className="mr-2" />
                 Back
@@ -619,7 +644,7 @@ const BookingModal = ({ isOpen, onClose }) => {
               <Button
                 type="button"
                 onClick={handleConfirmBooking}
-                className="flex-1 rounded-full py-5 font-semibold bg-gradient-to-r from-amber-400 to-amber-500 text-white hover:from-amber-500 hover:to-amber-600"
+                className="flex-1 rounded-full py-5 font-semibold bg-[#d9fb06] text-[#1a1c1b] hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Check size={18} className="mr-2" />
                 Confirm Booking
