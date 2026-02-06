@@ -333,9 +333,22 @@ const AdminPage = () => {
 
           {activeTab === 'bookings' && (
             <div>
-              <h2 className="text-[#d9fb06] font-semibold text-xl mb-6">
-                New Bookings ({bookings.length})
-              </h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-[#d9fb06] font-semibold text-xl">
+                  New Bookings ({bookings.length})
+                </h2>
+                <Button
+                  onClick={() => {
+                    const savedBookings = localStorage.getItem('corpcruise_bookings');
+                    if (savedBookings) setBookings(JSON.parse(savedBookings));
+                    toast.success('Bookings refreshed');
+                  }}
+                  variant="outline"
+                  className="bg-transparent text-[#d9fb06] border-[#d9fb06] hover:bg-[#d9fb06] hover:text-[#1a1c1b] rounded-full px-4 py-2 transition-all duration-300"
+                >
+                  <RefreshCw size={18} />
+                </Button>
+              </div>
               
               {bookings.length === 0 ? (
                 <div className="bg-[#302f2c] border border-[rgba(63,72,22,0.5)] p-12 text-center">
@@ -351,9 +364,34 @@ const AdminPage = () => {
                       key={booking.id}
                       className="bg-[#302f2c] border border-[rgba(63,72,22,0.5)] p-6"
                     >
-                      <p className="text-[#d9fb06] font-semibold">{booking.name}</p>
-                      <p className="text-[#888680] text-sm">{booking.email}</p>
-                      <p className="text-[#888680] text-sm mt-2">Code used: {booking.code}</p>
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                        <div className="flex-grow">
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-[#d9fb06] font-semibold text-lg">{booking.fullName}</span>
+                            <span className="bg-[#3f4816] text-[#d9fb06] text-xs font-semibold px-2 py-1 rounded-full uppercase">
+                              {booking.status || 'pending'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Company:</span> {booking.companyName}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Phone:</span> {booking.phoneNumber}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Email:</span> {booking.email}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">City:</span> {booking.city}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Duty Type:</span> {booking.dutyType}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Vehicle:</span> {booking.vehicleCategory}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Pickup:</span> {booking.pickupLocation}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Dropoff:</span> {booking.dropoffLocation}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Date:</span> {booking.date}</p>
+                            <p className="text-[#888680]"><span className="text-[#d9fb06]">Time:</span> {booking.time}</p>
+                          </div>
+                          {booking.specialRequests && (
+                            <p className="text-[#888680] mt-2"><span className="text-[#d9fb06]">Special Requests:</span> {booking.specialRequests}</p>
+                          )}
+                          <p className="text-[#888680] text-xs mt-3">
+                            Code: {booking.code} | Booked: {new Date(booking.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
