@@ -14,7 +14,7 @@ const iconMap = {
 const WhyChooseUs = () => {
   return (
     <section className="bg-[#1a1c1b] py-24 md:py-32">
-      <div className="max-w-[87.5rem] mx-auto px-10">
+      <div className="max-w-[87.5rem] mx-auto px-6 md:px-10">
         {/* Section Header */}
         <div className="text-center mb-16">
           <span className="text-[#888680] text-sm font-medium uppercase tracking-widest mb-4 block">
