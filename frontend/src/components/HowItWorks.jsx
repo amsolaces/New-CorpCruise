@@ -5,7 +5,7 @@ import { howItWorksData } from '../data/mock';
 const HowItWorks = () => {
   return (
     <section id="how-it-works" className="bg-[#302f2c] py-24 md:py-32">
-      <div className="max-w-[87.5rem] mx-auto px-10">
+      <div className="max-w-[87.5rem] mx-auto px-6 md:px-10">
         {/* Section Header */}
         <div className="text-center mb-16">
           <span className="text-[#888680] text-sm font-medium uppercase tracking-widest mb-4 block">
@@ -69,7 +69,7 @@ const HowItWorks = () => {
             </div>
             <div className="flex items-center gap-2 text-[#d9fb06]">
               <CheckCircle size={20} />
-              <span className="font-medium">Cancel anytime</span>
+              <span className="font-medium">100% Satisfaction Guaranteed</span>
             </div>
           </div>
         </div>
