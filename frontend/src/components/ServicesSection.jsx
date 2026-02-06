@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Briefcase, Plane, Shield, Calendar, Route, ArrowRight } from 'lucide-react';
 import { servicesData } from '../data/mock';
 
@@ -13,7 +14,7 @@ const iconMap = {
 const ServicesSection = () => {
   return (
     <section id="services" className="bg-[#302f2c] py-24 md:py-32">
-      <div className="max-w-[87.5rem] mx-auto px-10">
+      <div className="max-w-[87.5rem] mx-auto px-6 md:px-10">
         {/* Section Header */}
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-16">
           <div>
@@ -35,9 +36,10 @@ const ServicesSection = () => {
           {servicesData.map((service, index) => {
             const IconComponent = iconMap[service.icon];
             return (
-              <div
+              <Link
                 key={service.id}
-                className="group bg-[#1a1c1b] border border-[rgba(63,72,22,0.5)] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6 transition-all duration-300 hover:bg-[#3f4816] hover:border-[#3f4816] cursor-pointer"
+                to="/services"
+                className="group bg-[#1a1c1b] border border-[rgba(63,72,22,0.5)] p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-6 transition-all duration-300 hover:bg-[#3f4816] hover:border-[#3f4816] cursor-pointer block"
               >
                 {/* Number */}
                 <div className="text-[#3f4816] group-hover:text-[#d9fb06] font-black text-5xl md:text-6xl transition-colors duration-300 w-20 flex-shrink-0">
@@ -66,9 +68,20 @@ const ServicesSection = () => {
                 <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <ArrowRight className="text-[#d9fb06]" size={28} />
                 </div>
-              </div>
+              </Link>
             );
           })}
+        </div>
+
+        {/* View All Link */}
+        <div className="mt-8 text-center">
+          <Link 
+            to="/services"
+            className="inline-flex items-center gap-2 text-[#d9fb06] font-semibold hover:opacity-80 transition-opacity"
+          >
+            View All Services
+            <ArrowRight size={20} />
+          </Link>
         </div>
       </div>
     </section>
