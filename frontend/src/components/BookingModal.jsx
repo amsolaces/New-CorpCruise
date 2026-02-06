@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import {
   Dialog,
   DialogContent,
@@ -34,11 +35,15 @@ import {
 import { toast } from 'sonner';
 import { contactInfo } from '../data/mock';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
 const BookingModal = ({ isOpen, onClose }) => {
   // Code verification state
   const [accessCode, setAccessCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const [verifiedCode, setVerifiedCode] = useState('');
   
   // Multi-step form state
   const [currentStep, setCurrentStep] = useState(0); // 0 = verification, 1-3 = booking steps
@@ -96,37 +101,25 @@ const BookingModal = ({ isOpen, onClose }) => {
 
     setIsVerifying(true);
     
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const savedCodes = localStorage.getItem('corpcruise_codes');
-    let codes = savedCodes ? JSON.parse(savedCodes) : [];
-    
-    const matchingCode = codes.find(c => c.code === accessCode.toUpperCase() && !c.used);
-    
-    if (matchingCode) {
-      codes = codes.map(c => {
-        if (c.code === accessCode.toUpperCase()) {
-          return {
-            ...c,
-            used: true,
-            usedAt: new Date().toISOString(),
-            usedBy: 'User'
-          };
-        }
-        return c;
+    try {
+      const response = await axios.post(`${API}/codes/verify`, {
+        code: accessCode.trim()
       });
-      localStorage.setItem('corpcruise_codes', JSON.stringify(codes));
       
-      setIsVerified(true);
-      toast.success('Access verified! Proceeding to booking...');
-      
-      setTimeout(() => {
-        setCurrentStep(1);
-      }, 1000);
-    } else if (codes.find(c => c.code === accessCode.toUpperCase() && c.used)) {
-      toast.error('This code has already been used. Please contact admin for a new code.');
-    } else {
-      toast.error('Invalid access code. Please check and try again.');
+      if (response.data.valid) {
+        setIsVerified(true);
+        setVerifiedCode(response.data.code);
+        toast.success(response.data.message);
+        
+        setTimeout(() => {
+          setCurrentStep(1);
+        }, 1000);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error('Verification error:', error);
+      toast.error('Failed to verify code. Please try again.');
     }
     
     setIsVerifying(false);
@@ -165,30 +158,38 @@ const BookingModal = ({ isOpen, onClose }) => {
       return;
     }
 
-    const savedBookings = localStorage.getItem('corpcruise_bookings');
-    const bookings = savedBookings ? JSON.parse(savedBookings) : [];
-    
-    const newBooking = {
-      id: Date.now(),
-      ...bookingData,
-      code: accessCode.toUpperCase(),
-      createdAt: new Date().toISOString(),
-      status: 'pending'
-    };
-    
-    bookings.unshift(newBooking);
-    localStorage.setItem('corpcruise_bookings', JSON.stringify(bookings));
-    
-    toast.success('Booking confirmed! Our team will contact you shortly.');
-    
-    setTimeout(() => {
-      handleClose();
-    }, 1500);
+    try {
+      await axios.post(`${API}/bookings`, {
+        code: verifiedCode,
+        company_name: bookingData.companyName,
+        city: bookingData.city,
+        duty_type: bookingData.dutyType,
+        vehicle_category: bookingData.vehicleCategory,
+        pickup_location: bookingData.pickupLocation,
+        date: bookingData.date,
+        time: bookingData.time,
+        dropoff_location: bookingData.dropoffLocation,
+        full_name: bookingData.fullName,
+        phone_number: bookingData.phoneNumber,
+        email: bookingData.email,
+        special_requests: bookingData.specialRequests || null
+      });
+      
+      toast.success('Booking confirmed! Our team will contact you shortly.');
+      
+      setTimeout(() => {
+        handleClose();
+      }, 1500);
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast.error('Failed to confirm booking. Please try again.');
+    }
   };
 
   const handleClose = () => {
     setAccessCode('');
     setIsVerified(false);
+    setVerifiedCode('');
     setCurrentStep(0);
     setBookingData({
       companyName: '',
