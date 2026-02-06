@@ -11,6 +11,8 @@ import HowItWorks from "./components/HowItWorks";
 import TestimonialsSection from "./components/TestimonialsSection";
 import CTASection from "./components/CTASection";
 import Footer from "./components/Footer";
+import ServicesPage from "./pages/ServicesPage";
+import AdminPage from "./pages/AdminPage";
 
 const LandingPage = () => {
   return (
@@ -36,6 +38,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/admin" element={<AdminPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
