@@ -9,6 +9,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Check, Phone, Mail, Loader2, X, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { contactInfo } from '../data/mock';
 
 const BookingModal = ({ isOpen, onClose }) => {
   const [accessCode, setAccessCode] = useState('');
@@ -25,11 +26,30 @@ const BookingModal = ({ isOpen, onClose }) => {
 
     setIsVerifying(true);
     
-    // Simulate verification
+    // Simulate verification delay
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Mock verification - accept any code starting with "CORP-"
-    if (accessCode.toUpperCase().startsWith('CORP-') && accessCode.length >= 10) {
+    // Check against generated codes in localStorage
+    const savedCodes = localStorage.getItem('corpcruise_codes');
+    let codes = savedCodes ? JSON.parse(savedCodes) : [];
+    
+    const matchingCode = codes.find(c => c.code === accessCode.toUpperCase() && !c.used);
+    
+    if (matchingCode) {
+      // Mark code as used
+      codes = codes.map(c => {
+        if (c.code === accessCode.toUpperCase()) {
+          return {
+            ...c,
+            used: true,
+            usedAt: new Date().toISOString(),
+            usedBy: 'User'
+          };
+        }
+        return c;
+      });
+      localStorage.setItem('corpcruise_codes', JSON.stringify(codes));
+      
       setIsVerified(true);
       toast.success('Access verified! Redirecting to booking...');
       
@@ -38,8 +58,12 @@ const BookingModal = ({ isOpen, onClose }) => {
         setIsVerified(false);
         setAccessCode('');
         onClose();
-        toast.info('Booking portal ready. This is a demo version.');
+        toast.info('Booking portal ready. Please contact us to complete your booking.');
+        // Open email for booking
+        window.location.href = 'mailto:booking@thecorpcruise.com?subject=Ride%20Booking%20Request&body=My%20access%20code%3A%20' + accessCode.toUpperCase();
       }, 2000);
+    } else if (codes.find(c => c.code === accessCode.toUpperCase() && c.used)) {
+      toast.error('This code has already been used. Please contact admin for a new code.');
     } else {
       toast.error('Invalid access code. Please check and try again.');
     }
@@ -109,18 +133,18 @@ const BookingModal = ({ isOpen, onClose }) => {
             </p>
             <div className="space-y-2">
               <a
-                href="tel:+18005550000"
+                href={`tel:${contactInfo.phone}`}
                 className="flex items-center gap-3 text-[#888680] hover:text-[#d9fb06] transition-colors duration-300"
               >
                 <Phone size={16} />
-                <span className="font-medium">+1 (800) 555-CORP</span>
+                <span className="font-medium">{contactInfo.phone}</span>
               </a>
               <a
-                href="mailto:booking@thecorpcruise.com"
+                href={`mailto:${contactInfo.email}`}
                 className="flex items-center gap-3 text-[#888680] hover:text-[#d9fb06] transition-colors duration-300"
               >
                 <Mail size={16} />
-                <span className="font-medium">booking@thecorpcruise.com</span>
+                <span className="font-medium">{contactInfo.email}</span>
               </a>
             </div>
           </div>
@@ -137,7 +161,7 @@ const BookingModal = ({ isOpen, onClose }) => {
           >
             {isVerifying ? (
               <>
-                <Loader2 className="animate-spin\" size={20} />
+                <Loader2 className="animate-spin" size={20} />
                 Verifying...
               </>
             ) : isVerified ? (
@@ -152,11 +176,6 @@ const BookingModal = ({ isOpen, onClose }) => {
               </>
             )}
           </Button>
-
-          {/* Demo hint */}
-          <p className="text-[#888680]/60 text-xs text-center mt-4">
-            Demo: Use any code starting with "CORP-" (min 10 characters)
-          </p>
         </form>
       </DialogContent>
     </Dialog>
